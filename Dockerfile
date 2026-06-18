@@ -16,4 +16,5 @@ COPY . .
 # Railway provides PORT automatically
 ENV PORT=8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Change line 19 from the old array format to this exact line:
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
