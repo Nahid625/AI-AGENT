@@ -1,91 +1,96 @@
-from datetime import datetime, timedelta
-import bcrypt
-from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordBearer
-from dotenv import load_dotenv
 import os
+from datetime import datetime, timedelta
+
+import bcrypt
 import jwt
+from dotenv import load_dotenv
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
+
 from src.config.db import get_db
-from src.schemas.schema import User 
+from src.schemas.schema import User
+
 load_dotenv()
 
 
 def hash_pass(plain_password: str):
     # You MUST encode to bytes first!
-    password_bytes = plain_password.encode('utf-8')
+    password_bytes = plain_password.encode("utf-8")
     salt = bcrypt.gensalt()
-    return bcrypt.hashpw(password_bytes, salt).decode('utf-8')
+    return bcrypt.hashpw(password_bytes, salt).decode("utf-8")
+
 
 def verify_pass(plain_password: str, hashed_password: str):
-    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+
 
 # Use a fallback if the .env isn't found
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 
 
-def access_token(data :dict):
+def access_token(data: dict):
     try:
-      to_encode = data.copy()
-     # setExpiry 
-      expire = datetime.utcnow() + timedelta(weeks=5)
-      to_encode.update({"exp":expire})
+        to_encode = data.copy()
+        # setExpiry
+        expire = datetime.utcnow() + timedelta(weeks=5)
+        to_encode.update({"exp": expire})
 
-      encoded_jwt = jwt.encode(to_encode,SECRET_KEY,algorithm=ALGORITHM)
-      return encoded_jwt
-    
+        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        return encoded_jwt
 
     except TypeError as e:
         # DEBUG: This happens if SECRET_KEY is None or 'data' isn't a dict
-     raise HTTPException(status_code=500, detail=f"JWT Config Error: Check your .env file! ({str(e)})")
-    
+        raise HTTPException(
+            status_code=500, detail=f"JWT Config Error: Check your .env file! ({str(e)})"
+        )
+
     except ValueError as e:
         # DEBUG: This happens if the Algorithm name is wrong
-     raise HTTPException(status_code=500, detail=f"JWT Value Error: {str(e)}")
-        
+        raise HTTPException(status_code=500, detail=f"JWT Value Error: {str(e)}")
+
     except Exception as e:
         # DEBUG: The ultimate fallback
-     raise HTTPException(status_code=500, detail=f"Special JWT Debug: {str(e)}")
-
+        raise HTTPException(status_code=500, detail=f"Special JWT Debug: {str(e)}")
 
 
 def decodedToken(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        
+
         # Pulling out multiple things
         user_id = payload.get("is")
         user_email = payload.get("email")
-        
+
         print(f"DEBUG: Found User ID {user_id} with Email {user_email}")
-        
-        return payload # Returns the whole dict with everything inside
-    except Exception as e:
+
+        return payload  # Returns the whole dict with everything inside
+    except Exception:
         raise HTTPException(status_code=401, detail="Token is trash, bro!")
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/user/login")
 
 
-
-
-
-
 bearer_scheme = HTTPBearer()
 
+
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),  # ← gets token from Authorization header automatically
-    db: Session = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(
+        bearer_scheme
+    ),  # ← gets token from Authorization header automatically
+    db: Session = Depends(get_db),
 ) -> User:
-    token = credentials.credentials        # ← raw token string extracted from "Bearer <token>"
-    payload = decodedToken(token)          # ← your existing decode function
-    
+    token = credentials.credentials  # ← raw token string extracted from "Bearer <token>"
+    payload = decodedToken(token)  # ← your existing decode function
+
     user_id = payload.get("id")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
-    
+
     return user

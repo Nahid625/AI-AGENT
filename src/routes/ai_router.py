@@ -1,24 +1,17 @@
-
-
-from typing import Optional
-import uuid
-
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from sqlalchemy.orm import Session
-from src.helper import access_token, get_current_user
-from src.schemas.schema import ChatSession
-from src.config.db import get_db
-from src.services.chat_Services import add_message, create_session, get_session_with_messages
-from src.controller.ai_function import ask_question, ask_with_image
-from src.models.models  import ChatSessionOut, MessageCreate, QuestionResponse
-from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, UploadFile
 
+from src.config.db import get_db
+from src.controller.ai_function import ask_question, ask_with_image
+from src.helper import get_current_user
+from src.models.models import QuestionResponse
+from src.schemas.schema import ChatSession
+from src.services.chat_Services import add_message, create_session
 from src.tools.uplaod import upload_to_cloudinary
 
-router = APIRouter(
-    prefix="/AI",
-    tags=["Ai side"]
-)
+router = APIRouter(prefix="/AI", tags=["Ai side"])
+
 
 @router.get("/")
 def home():
@@ -27,19 +20,18 @@ def home():
 
 load_dotenv()
 
+
 @router.post("/question", response_model=QuestionResponse)
 def quistion(quistion: str):
     return ask_question(quistion)
 
 
-
-
 @router.post("/ask")
 def ask(
     content: str = Form(...),
-    image: Optional[UploadFile] = File(default=None),
+    image: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user)
+    current_user=Depends(get_current_user),
 ):
     user_id = current_user.id
     image_url = None
@@ -49,7 +41,7 @@ def ask(
         image_url = upload_to_cloudinary(image)
 
         # 2. Reset file pointer and call vision AI
-        image.file.seek(0)                              # ← reset after cloudinary upload
+        image.file.seek(0)  # ← reset after cloudinary upload
         ai_response = ask_with_image(content, image.file)  # ← vision response
     else:
         # 3. Normal text question
@@ -67,23 +59,25 @@ def ask(
         "session_id": session.id,
         "title": session.title,
         "answer": ai_response,
-        "image_url": image_url
+        "image_url": image_url,
     }
+
 
 @router.post("/ask/{session_id}")
 def ask_followup(
     session_id: str,
     content: str = Form(...),
-    image: Optional[UploadFile] = File(default=None),
+    image: UploadFile | None = File(default=None),
     db: Session = Depends(get_db),
-    current_user = Depends(get_current_user) 
+    current_user=Depends(get_current_user),
 ):
     user_id = current_user.id
-    session = db.query(ChatSession).filter(
-        ChatSession.id == session_id,
-        ChatSession.user_id == user_id
-    ).first()
-    
+    session = (
+        db.query(ChatSession)
+        .filter(ChatSession.id == session_id, ChatSession.user_id == user_id)
+        .first()
+    )
+
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -91,7 +85,7 @@ def ask_followup(
     image_url = None
     if image and image.filename:
         image_url = upload_to_cloudinary(image)
-    
+
     add_message(db, session_id, role="user", content=content, image_url=image_url)
 
     # 2. Build history
@@ -101,7 +95,7 @@ def ask_followup(
     if image and image.filename:
         image.file.seek(0)
         # Note: Make sure ask_with_image handles history if you want it to!
-        ai_response = ask_with_image(content, image.file) 
+        ai_response = ask_with_image(content, image.file)
     else:
         # This is where history is used
         ai_response = ask_question(question=content, history=history)
@@ -109,7 +103,4 @@ def ask_followup(
     # 4. Save assistant reply
     add_message(db, session_id, role="assistant", content=ai_response)
 
-    return {
-        "session_id": session_id,
-        "answer": ai_response
-    }
+    return {"session_id": session_id, "answer": ai_response}

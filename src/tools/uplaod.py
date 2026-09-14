@@ -1,6 +1,6 @@
 import cloudinary.uploader
-from fastapi import UploadFile, File, HTTPException
-import src.config.cloudinary_config   # ← add this line — runs the config on import
+from fastapi import File, HTTPException, UploadFile
+
 
 def upload_to_cloudinary(file: UploadFile = File(...)):
     try:

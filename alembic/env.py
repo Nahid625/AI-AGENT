@@ -1,9 +1,11 @@
 import os
 import sys
 from logging.config import fileConfig
-from sqlalchemy import engine_from_config, pool
-from alembic import context
+
 from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # 1. Add your project root to path so Python finds the 'src' folder
 sys.path.append(os.getcwd())
@@ -13,7 +15,7 @@ load_dotenv()
 
 # 3. Import your Base and models for 'autogenerate'
 from src.config.db import Base
-from src.schemas.schema import User, ChatSession, Message
+from src.schemas.schema import ChatSession, Message, User
 
 # 4. Set target_metadata (around line 21 in your screenshot)
 target_metadata = Base.metadata
