@@ -1,8 +1,10 @@
 # src/schemas/schema.py
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import String, Text, DateTime, ForeignKey, func
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+from sqlalchemy import DateTime, ForeignKey, String, Text, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from src.config.db import Base
 
 
@@ -20,6 +22,7 @@ class User(Base):
     # relationships
     chats: Mapped[list["ChatSession"]] = relationship(back_populates="user", cascade="all, delete")
 
+
 # ─── CHAT SESSION ────────────────────────────────────
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
@@ -30,7 +33,10 @@ class ChatSession(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="chats")
-    messages: Mapped[list["Message"]] = relationship(back_populates="session", cascade="all, delete")
+    messages: Mapped[list["Message"]] = relationship(
+        back_populates="session", cascade="all, delete"
+    )
+
 
 # ─── MESSAGE (History) ───────────────────────────────
 class Message(Base):
@@ -38,7 +44,7 @@ class Message(Base):
 
     id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     session_id: Mapped[str] = mapped_column(ForeignKey("chat_sessions.id", ondelete="CASCADE"))
-    role: Mapped[str] = mapped_column(String(10))        # "user" | "assistant"
+    role: Mapped[str] = mapped_column(String(10))  # "user" | "assistant"
     content: Mapped[str] = mapped_column(Text, nullable=False)
     image_url: Mapped[str] = mapped_column(String, nullable=True)  # for image messages
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())

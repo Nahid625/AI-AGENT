@@ -1,20 +1,17 @@
 FROM python:3.12-slim
 
-WORKDIR /src
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
 
-# Install system dependencies if needed
-RUN apt-get update && apt-get install -y \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
 
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Railway provides PORT automatically
-ENV PORT=8000
+EXPOSE 8080
 
-# Change line 19 from the old array format to this exact line:
-CMD uvicorn main:app --host 0.0.0.0 --port $PORT
+# Railway and other hosts inject PORT; default 8080 for local / docker compose
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]

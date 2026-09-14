@@ -1,57 +1,60 @@
-from pydantic import BaseModel 
 from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class QuestionResponse(BaseModel):
-    yourQuistion : str
+    yourQuistion: str
     response: str
-    
+
+
 class QuestionRequest(BaseModel):
     question: str
 
+
 class UserRequest(BaseModel):
-    firstname : str
+    firstname: str
     lastname: str
-    email : str 
-    hashed_password : str
-    created_at : datetime
+    email: str
+    hashed_password: str
+    created_at: datetime
+
 
 # login
 class LoginRequest(BaseModel):
-    email : str 
-    password : str
+    email: str
+    password: str
+
 
 class SignupResponse(BaseModel):
-     message : str
-     user : dict
+    message: str
+    user: dict
 
-
-
-
-from typing import Optional
-from datetime import datetime
 
 # ── Message ──────────────────────────────────────────
 class MessageCreate(BaseModel):
     content: str
     # image_url: Optional[File] = None
 
+
 class MessageOut(BaseModel):
     id: str
-    role: str                  # "user" | "assistant"
+    role: str  # "user" | "assistant"
     content: str
-    image_url: Optional[str]
+    image_url: str | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
 
+
 # ── Chat Session ─────────────────────────────────────
 class ChatSessionCreate(BaseModel):
-    title: Optional[str] = None   # if None, auto-generate from first message
+    title: str | None = None  # if None, auto-generate from first message
+
 
 class ChatSessionOut(BaseModel):
     id: str
-    title: Optional[str]
+    title: str | None
     created_at: datetime
     messages: list[MessageOut] = []
 
