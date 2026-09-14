@@ -3,11 +3,7 @@ from src.controller.ai_function import ask_question
 from src.schemas.schema import ChatSession, Message
 import uuid
 from langchain_groq import ChatGroq
-def get_or_create_session(user_id: str, first_message: str,db: Session, ) -> ChatSession:
-    """Generate a short 5-7 word title for a chat that starts with this question. Return ONLY the title, no quotes, no explanation."""
-    # Take first 60 chars of question as title (AI-style auto title)
-    title = first_message.strip()[:60] + ("..." if len(first_message) > 60 else "")
-    
+def create_session(db: Session, user_id: str, title: str | None = None) -> ChatSession:
     session = ChatSession(
         id=str(uuid.uuid4()),
         user_id=user_id,

@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from src.helper import access_token, get_current_user
 from src.schemas.schema import ChatSession
 from src.config.db import get_db
-from src.services.chat_Services import add_message, generate_title, get_or_create_session, get_session_with_messages
+from src.services.chat_Services import add_message, create_session, get_session_with_messages
 from src.controller.ai_function import ask_question, ask_with_image
 from src.models.models  import ChatSessionOut, MessageCreate, QuestionResponse
 from fastapi import APIRouter, Depends, FastAPI, File, Form, HTTPException, UploadFile
@@ -56,7 +56,8 @@ def ask(
         ai_response = ask_question(question=content)
 
     # 4. Auto-create session
-    session = get_or_create_session(user_id, content, db)
+    title = content.strip()[:60] + ("..." if len(content) > 60 else "")
+    session = create_session(db, user_id, title=title)
 
     # 5. Save messages
     add_message(db, session.id, role="user", content=content, image_url=image_url)
