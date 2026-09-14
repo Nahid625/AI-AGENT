@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from src.helper import get_current_user
 from src.models.models import ChatSessionCreate, ChatSessionOut
-from src.services.chat_Services import get_or_create_session, delete_session, get_session_with_messages, get_user_sessions
+from src.services.chat_Services import create_session, delete_session, get_session_with_messages, get_user_sessions
 from src.config.db import get_db
 
 
@@ -16,8 +16,8 @@ def new_session(
     current_user = Depends(get_current_user)
     # current_user = Depends(get_current_user)  ← uncomment after auth
 ):
-    user_id = current_user.id  # replace after auth
-    return get_or_create_session(db, user_id=user_id, title=body.title)
+    user_id = current_user.id
+    return create_session(db, user_id=user_id, title=body.title)
 
 # GET /chat/sessions → list all sessions for the user
 @router.get("/sessions", response_model=list[ChatSessionOut])
