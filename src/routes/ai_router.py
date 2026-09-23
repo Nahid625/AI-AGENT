@@ -22,8 +22,8 @@ load_dotenv()
 
 
 @router.post("/question", response_model=QuestionResponse)
-def quistion(quistion: str):
-    return ask_question(quistion)
+def question(question: str):
+    return ask_question(question)
 
 
 @router.post("/ask")
