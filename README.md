@@ -11,9 +11,9 @@ An intelligent, open-source AI project designed to help you build AI application
 | Feature | Status |
 |---|---|
 | 🧠 AI Q&A (question & answer routes) | ✅ Done |
-| 👤 User Authentication (JWT) | 🔧 In Progress |
-| 🗂️ Chat Session & History System | 🔧 In Progress |
-| 🖼️ Image Understanding & Explanation | 🔧 In Progress |
+| 👤 User Authentication (JWT) | ✅ Done |
+| 🗂️ Chat Session & History System | ✅ Done |
+| 🖼️ Image Understanding & Explanation | ✅ Done |
 | 🐘 PostgreSQL Database (via SQLAlchemy + Alembic) | ✅ Configured |
 | 🔄 Database Migrations (Alembic) | ✅ Configured |
 
@@ -24,7 +24,12 @@ An intelligent, open-source AI project designed to help you build AI application
 ```
 AI-EGENT/
 ├── main.py               # FastAPI app entry point
-├── personal.py           # Personal/dev utilities
+├── Dockerfile            # Docker configuration for the app
+├── docker-compose.yml    # Docker Compose for app + postgres
+├── .env.example          # Template for environment variables
+├── .github/
+│   └── workflows/
+│       └── ci.yml        # GitHub Actions CI pipeline
 ├── alembic.ini           # Alembic migration config
 ├── requirements.txt      # Python dependencies
 ├── alembic/              # Database migration scripts
@@ -45,8 +50,9 @@ AI-EGENT/
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.12+
 - PostgreSQL
+- Docker & Docker Compose (optional)
 - pip
 
 ### 1. Clone the Repository
@@ -67,10 +73,13 @@ pip install -r requirements.txt
 Create a `.env` file in the root directory:
 
 ```env
-DATABASE_URL=postgresql://username:password@localhost:5432/ai_egent
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ai_egent
 SECRET_KEY=your_secret_key_here
+ALGORITHM=HS256
 GROQ_API_KEY=your_groq_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
+OPENWEATHERMAP_API_KEY=your_openweathermap_api_key
+SERPAPI_API_KEY=your_serpapi_api_key
+OPPENROUTER_API_KEY=your_openrouter_api_key
 ```
 
 ### 4. Run Database Migrations
@@ -125,7 +134,7 @@ The API will be available at `http://127.0.0.1:8000`
 - [x] **Session management** — Create, retrieve, and delete chat sessions
 - [ ] Pagination for chat histories
 - [ ] Rate limiting & API key management
-- [ ] Dockerize the application
+- [x] **Dockerize the application** — Added Dockerfile and docker-compose.yml
 
 ---
 
